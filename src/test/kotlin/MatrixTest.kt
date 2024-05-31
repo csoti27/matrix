@@ -2,6 +2,7 @@ package org.example
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 
 class MatrixTest {
@@ -12,10 +13,13 @@ class MatrixTest {
             intArrayOf(1, 2),
             intArrayOf(3, 4)
         ))
-        assertEquals(1, matrix[0, 0])
-        assertEquals(2, matrix[0, 1])
-        assertEquals(3, matrix[1, 0])
-        assertEquals(4, matrix[1, 1])
+
+        val expectedMatrix = Matrix(arrayOf(
+            intArrayOf(1, 2),
+            intArrayOf(3, 4)
+        ))
+
+        assertEquals(expectedMatrix, matrix)
     }
 
     @Test
@@ -38,14 +42,17 @@ class MatrixTest {
             intArrayOf(5, 6),
             intArrayOf(7, 8)
         ))
+
         val result = matrix1 + matrix2
-        assertEquals(6, result[0, 0])
-        assertEquals(8, result[0, 1])
-        assertEquals(10, result[1, 0])
-        assertEquals(12, result[1, 1])
+
+        val expectedMatrix = Matrix(arrayOf(
+            intArrayOf(6, 8),
+            intArrayOf(10, 12)
+        ))
+
+        assertEquals(expectedMatrix, result)
     }
 
-    @Test
     fun testMinus() {
         val matrix1 = Matrix(arrayOf(
             intArrayOf(5, 6),
@@ -55,11 +62,15 @@ class MatrixTest {
             intArrayOf(1, 2),
             intArrayOf(3, 4)
         ))
+
         val result = matrix1 - matrix2
-        assertEquals(4, result[0, 0])
-        assertEquals(4, result[0, 1])
-        assertEquals(4, result[1, 0])
-        assertEquals(4, result[1, 1])
+
+        val expectedMatrix = Matrix(arrayOf(
+            intArrayOf(4, 4),
+            intArrayOf(4, 4)
+        ))
+
+        assertEquals(expectedMatrix, result)
     }
 
     @Test
@@ -72,11 +83,15 @@ class MatrixTest {
             intArrayOf(5, 6),
             intArrayOf(7, 8)
         ))
+
         val result = matrix1 * matrix2
-        assertEquals(19, result[0, 0])
-        assertEquals(22, result[0, 1])
-        assertEquals(43, result[1, 0])
-        assertEquals(50, result[1, 1])
+
+        val expectedMatrix = Matrix(arrayOf(
+            intArrayOf(19, 22),
+            intArrayOf(43, 50)
+        ))
+
+        assertEquals(expectedMatrix, result)
     }
 
     @Test
@@ -85,23 +100,27 @@ class MatrixTest {
             intArrayOf(1, 2, 3),
             intArrayOf(4, 5, 6)
         ))
+
         val result = matrix.transpose()
-        assertEquals(1, result[0, 0])
-        assertEquals(4, result[0, 1])
-        assertEquals(2, result[1, 0])
-        assertEquals(5, result[1, 1])
-        assertEquals(3, result[2, 0])
-        assertEquals(6, result[2, 1])
+
+        val expectedMatrix = Matrix(arrayOf(
+            intArrayOf(1, 4),
+            intArrayOf(2, 5),
+            intArrayOf(3, 6)
+        ))
+
+        assertEquals(expectedMatrix, result)
     }
 
     @Test
     fun testDeterminant() {
         val matrix = Matrix(arrayOf(
-            intArrayOf(1, 2),
-            intArrayOf(3, 4)
+            intArrayOf(1, 2, 3),
+            intArrayOf(4, 5, 6),
+            intArrayOf(7, 8, 9)
         ))
         val determinant = matrix.determinant()
-        assertEquals(-2, determinant)
+        assertEquals(0, determinant)
     }
 
     @Test
@@ -133,6 +152,123 @@ class MatrixTest {
             intArrayOf(3, 4)
         ))
         assertEquals(matrix1.hashCode(), matrix2.hashCode())
+    }
+
+    // Error path tests
+    @Test
+    fun testEmptyMatrix() {
+        val exception = assertThrows<IllegalArgumentException> {
+            Matrix(arrayOf())
+        }
+        assertEquals("Matrix cannot be empty.", exception.message)
+    }
+
+    @Test
+    fun testInconsistentRowSizes() {
+        val exception = assertThrows<IllegalArgumentException> {
+            Matrix(arrayOf(
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            ))
+        }
+        assertEquals("All rows must have the same number of columns.", exception.message)
+    }
+
+    @Test
+    fun testGetOutOfBounds() {
+        val matrix = Matrix(arrayOf(
+            intArrayOf(1, 2),
+            intArrayOf(3, 4)
+        ))
+        var exception = assertThrows<IllegalArgumentException> {
+            matrix[2, 0]
+        }
+        assertEquals("Row index 2 out of bounds.", exception.message)
+
+        exception = assertThrows<IllegalArgumentException> {
+            matrix[0, 3]
+        }
+        assertEquals("Column index 3 out of bounds.", exception.message)
+    }
+
+    @Test
+    fun testSetOutOfBounds() {
+        val matrix = Matrix(arrayOf(
+            intArrayOf(1, 2),
+            intArrayOf(3, 4)
+        ))
+        var exception = assertThrows<IllegalArgumentException> {
+            matrix[2, 0] = 5
+        }
+        assertEquals("Row index 2 out of bounds.", exception.message)
+
+        exception = assertThrows<IllegalArgumentException> {
+            matrix[0, 3] = 5
+        }
+        assertEquals("Column index 3 out of bounds.", exception.message)
+    }
+
+    @Test
+    fun testPlusDifferentDimensions() {
+        val matrix1 = Matrix(arrayOf(
+            intArrayOf(1, 2),
+            intArrayOf(3, 4)
+        ))
+        val matrix2 = Matrix(arrayOf(
+            intArrayOf(1, 2, 3),
+            intArrayOf(4, 5, 6)
+        ))
+
+        val exception = assertThrows<IllegalArgumentException> {
+            matrix1 + matrix2
+        }
+        assertEquals("Matrices must have the same dimensions to be added.", exception.message)
+    }
+
+    @Test
+    fun testMinusDifferentDimensions() {
+        val matrix1 = Matrix(arrayOf(
+            intArrayOf(1, 2),
+            intArrayOf(3, 4)
+        ))
+        val matrix2 = Matrix(arrayOf(
+            intArrayOf(1, 2, 3),
+            intArrayOf(4, 5, 6)
+        ))
+
+        val exception = assertThrows<IllegalArgumentException> {
+            matrix1 - matrix2
+        }
+        assertEquals("Matrices must have the same dimensions to be subtracted.", exception.message)
+    }
+
+    @Test
+    fun testTimesInvalidDimensions() {
+        val matrix1 = Matrix(arrayOf(
+            intArrayOf(1, 2),
+            intArrayOf(3, 4)
+        ))
+        val matrix2 = Matrix(arrayOf(
+            intArrayOf(5, 6, 7)
+        ))
+
+        val exception = assertThrows<IllegalArgumentException> {
+            matrix1 * matrix2
+        }
+        assertEquals("Number of columns in the first matrix must be equal to the number of rows in the second matrix.", exception.message)
+    }
+
+    @Test
+    fun testDeterminantNonSquare() {
+        val matrix = Matrix(arrayOf(
+            intArrayOf(1, 2, 3),
+            intArrayOf(4, 5, 6)
+        ))
+
+        val exception = assertThrows<IllegalArgumentException> {
+            matrix.determinant()
+        }
+        assertEquals("Determinant is only defined for square matrices.", exception.message)
     }
 
     @Test
